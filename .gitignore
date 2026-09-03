@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+
+# Environment variables
+.env
+
+# Optional npm/hybrid typecheck buffers
+*.tsbuildinfo
+
+# Optional: Next.js swc cache
+*.swc
+
+# Spring Initializr gradle files
+.gradle
+
+# IntelliJ IDEA
+.idea
+
+# Visual Studio Code
+.vscode
+
+# OSX
+.DS_Store
+
+# Turbopack
+.turbo
