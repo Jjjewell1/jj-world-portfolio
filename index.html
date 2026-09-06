@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JJ JEWELL // DIGITAL FORGE</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020509;color:#edf8fb;font-family:Inter,Arial,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+#ui{position:fixed;inset:0;pointer-events:none}.bar{position:absolute;left:22px;right:22px;top:18px;display:flex;justify-content:space-between;align-items:center}.logo{font-weight:900;letter-spacing:-.06em}.logo span{color:#74efff}.pill{font-size:10px;letter-spacing:.15em;color:#7dffa8;border:1px solid #7dffa833;background:#06110be8;border-radius:99px;padding:8px 12px}
+#intro{position:absolute;left:5vw;top:50%;transform:translateY(-50%);width:470px;transition:.5s}.eyebrow{font-size:10px;letter-spacing:.23em;color:#74efff;font-weight:800}.title{font-size:clamp(50px,7vw,88px);line-height:.85;letter-spacing:-.08em;font-weight:900;margin:15px 0}.title em{font-style:normal;color:transparent;-webkit-text-stroke:1px #eaf7fa66}.copy{font-size:14px;line-height:1.8;color:#9aafb7}.controls{font-size:10px;line-height:1.8;color:#d2e0e4;margin-top:20px}
+#panel{position:absolute;right:5vw;top:50%;width:min(430px,86vw);transform:translateY(-50%) translateX(30px);opacity:0;transition:.35s;background:#071019ef;border:1px solid #74efff35;border-radius:20px;padding:25px;box-shadow:0 30px 100px #000d;backdrop-filter:blur(18px);pointer-events:none}#panel.open{opacity:1;transform:translateY(-50%);pointer-events:auto}.close{float:right;background:#ffffff08;color:#fff;border:1px solid #ffffff18;border-radius:8px;padding:5px 9px;cursor:pointer}.panelTitle{font-size:31px;font-weight:800;letter-spacing:-.05em;margin:9px 0}.panelText{font-size:13px;color:#9db0b7;line-height:1.75}.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{font-size:10px;color:#74efff;border:1px solid #74efff2d;border-radius:99px;padding:6px 8px}.btn{display:inline-block;margin-top:17px;margin-right:7px;padding:10px 12px;border-radius:9px;background:#74efff;color:#031015;text-decoration:none;font-weight:800;font-size:10px}
+#map{position:absolute;bottom:20px;left:20px;display:flex;gap:6px;flex-wrap:wrap;max-width:610px}.node{pointer-events:auto;cursor:pointer;padding:7px 9px;border:1px solid #74efff25;background:#061019db;color:#a9bbc1;border-radius:8px;font-size:9px}.node:hover{border-color:#74efff88;color:#fff}
+#prompt{position:absolute;bottom:20px;right:20px;text-align:right;font-size:9px;color:#71868e;line-height:1.7}
+#terminal{position:absolute;left:50%;bottom:60px;transform:translateX(-50%);width:min(560px,86vw);background:#020509f2;border:1px solid #7dffa833;border-radius:12px;opacity:0;pointer-events:none}.termHead{padding:8px 11px;border-bottom:1px solid #ffffff0d;color:#72858c;font-size:9px}.termBody{padding:11px;font:11px/1.7 monospace;color:#9cf3b0;max-height:160px;overflow:auto}.termBody input{background:none;border:0;outline:0;color:#9cf3b0;font:inherit;width:75%}
+#cross{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);opacity:.35}#cross:before,#cross:after{content:"";position:absolute;background:#74efff}#cross:before{width:18px;height:1px;top:9px}#cross:after{height:18px;width:1px;left:9px}
+@media(max-width:800px){#intro{left:5vw;top:39%;width:90vw}.title{font-size:57px}.copy{font-size:12px}#panel{top:auto;bottom:58px;right:4vw;transform:translateY(20px)}#panel.open{transform:translateY(0)}#prompt{display:none}}
+</style>
+</head>
+<body>
+<canvas id="world"></canvas>
+<div id="ui">
+ <div class="bar"><div class="logo">JJ <span>JEWELL</span> // DIGITAL FORGE</div><div class="pill">● SYSTEM ONLINE</div></div>
+ <div id="intro"><div class="eyebrow">INTERACTIVE 3D PORTFOLIO / RAVEN, VIRGINIA</div><div class="title">BUILD.<br><em>CONNECT.</em><br>DEPLOY.</div><div class="copy">This is not a résumé on a page. It's a map of the systems JJ builds, operates and learns — from WordPress and client hosting to homelab infrastructure, local AI, cybersecurity and digital fabrication.</div><div class="controls">DRAG — LOOK AROUND &nbsp; | &nbsp; W A S D — MOVE<br>SCROLL — MOVE FORWARD/BACK &nbsp; | &nbsp; CLICK — INSPECT<br>T — TERMINAL &nbsp; | &nbsp; ESC — CLOSE PANEL</div></div>
+ <div id="panel"><button class="close">×</button><div class="eyebrow" id="ey"></div><div class="panelTitle" id="pt"></div><div class="panelText" id="px"></div><div class="tags" id="tg"></div><div id="acts"></div></div>
+ <div id="map"></div><div id="prompt">THE FORGE // EXPLORE THE ROOMS<br>6 SYSTEMS / 1 OPERATOR</div>
+ <div id="terminal"><div class="termHead">JJ-SHELL // PRESS T TO CLOSE</div><div class="termBody" id="termBody"><div>Type <b>help</b>.</div><div>&gt; <input id="termInput" autocomplete="off"></div></div></div>
+ <div id="cross"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.min.js"></script>
+<script>
+const D={
+web:{ey:"01 / WEB LAB",t:"Web Development",x:"Freelance web development through Jewellcore, focused on practical WordPress builds, customization, SEO and managed hosting.",g:["WordPress","Elementor Pro","ACF","PHP","Tailwind CSS","Rank Math SEO"],a:[["CURRENT PORTFOLIO","https://jj.jewellcore.com/"]]},
+infra:{ey:"02 / SERVER ROOM",t:"Infrastructure",x:"Self-hosted infrastructure spanning Unraid, Docker, Docker Compose, Portainer, Coolify, Cloudflare Tunnels, DNS, SSL/TLS and reverse-proxy tooling.",g:["Unraid","Docker","Portainer","Coolify","Cloudflare","DNS","SSL/TLS"],a:[]},
+ai:{ey:"03 / AI WORKSTATION",t:"Local AI",x:"A private AI development direction using Ollama, LM Studio, Jan, Cline, OpenCode, VS Code and ComfyUI with dedicated RTX GPU acceleration.",g:["Ollama","OpenCode","Cline","ComfyUI","RTX GPU"],a:[]},
+security:{ey:"04 / SECURITY OPS",t:"Cybersecurity",x:"Information Systems Technology and Cyber Security coursework at Southwest Virginia Community College, combined with hands-on systems and networking practice.",g:["Cybersecurity","Networking","Linux","Systems Administration"],a:[]},
+fab:{ey:"05 / FABRICATION BAY",t:"3D Fabrication",x:"Functional prototyping with OpenSCAD, Tinkercad and Bambu Studio — including utility mounts, brackets and homelab enclosures made on a Bambu Lab P1S.",g:["OpenSCAD","Tinkercad","Bambu P1S","PETG","TPU"],a:[]},
+career:{ey:"06 / OPERATOR PROFILE",t:"The Operator",x:"More than a decade of entrepreneurship and operations leadership, now combined with web development, infrastructure and cybersecurity.",g:["Jewellcore","11+ years","Crew Leadership","Operations"],a:[["EMAIL JJ","mailto:jj.jewellcore@gmail.com"]]}
+};
+const c=document.getElementById("world"),r=new THREE.WebGLRenderer({canvas:c,antialias:true});r.setPixelRatio(Math.min(devicePixelRatio,2));r.setSize(innerWidth,innerHeight);r.outputColorSpace=THREE.SRGBColorSpace;
+const s=new THREE.Scene();s.background=new THREE.Color(0x020509);s.fog=new THREE.FogExp2(0x020509,.028);
+const cam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,150);cam.position.set(0,3.2,15);
+s.add(new THREE.HemisphereLight(0x9defff,0x020305,1.3));let L=new THREE.PointLight(0x74efff,25,35);L.position.set(0,6,0);s.add(L);
+let world=new THREE.Group();s.add(world);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100,50,50),new THREE.MeshBasicMaterial({color:0x0a1720,wireframe:true,transparent:true,opacity:.22}));floor.rotation.x=-Math.PI/2;world.add(floor);
+function M(col,emit=0){return new THREE.MeshStandardMaterial({color:col,metalness:.72,roughness:.25,emissive:emit,emissiveIntensity:.45})}
+function addRoom(z,labelText){
+ const g=new THREE.Group();g.position.z=z;
+ const floor2=new THREE.Mesh(new THREE.BoxGeometry(16,.18,10),M(0x09141b));floor2.position.y=.1;g.add(floor2);
+ for(let side of [-1,1]){let wall=new THREE.Mesh(new THREE.BoxGeometry(.2,6,10),M(0x071017));wall.position.set(side*8,3,0);g.add(wall)}
+ let sign=new THREE.Sprite(new THREE.SpriteMaterial({map:texture(labelText),transparent:true}));sign.position.set(0,5.2,0);sign.scale.set(5,.8,1);g.add(sign);world.add(g);return g;
+}
+function texture(txt){let q=document.createElement("canvas"),x=q.getContext("2d");q.width=800;q.height=120;x.font="800 34px Arial";x.fillStyle="#74efff";x.fillText(txt,12,72);return new THREE.CanvasTexture(q)}
+const rooms={web:addRoom(-4,"WEB LAB"),infra:addRoom(-16,"SERVER ROOM"),ai:addRoom(-28,"AI WORKSTATION"),security:addRoom(-40,"SECURITY OPS"),fab:addRoom(-52,"FABRICATION BAY"),career:addRoom(-64,"THE OPERATOR")};
+function makeNode(id,pos,color){
+ let g=new THREE.Group();g.position.set(...pos);g.userData.id=id;
+ let core=new THREE.Mesh(new THREE.IcosahedronGeometry(1.15,2),M(color,color));g.add(core);
+ let ring=new THREE.Mesh(new THREE.TorusGeometry(1.65,.035,8,80),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.65}));ring.rotation.x=Math.PI/2;g.add(ring);
+ world.add(g);
+ return g;
+}
+const ns={
+web:makeNode("web",[-4.8,2,-4],0x74efff),
+infra:makeNode("infra",[4.8,2,-16],0x74efff),
+ai:makeNode("ai",[-4.8,2,-28],0xffbd66),
+security:makeNode("security",[4.8,2,-40],0x7dffa8),
+fab:makeNode("fab",[-4.8,2,-52],0xff91c8),
+career:makeNode("career",[4.8,2,-64],0xbba7ff)
+};
+function addServerRack(g){for(let i=0;i<5;i++){let b=new THREE.Mesh(new THREE.BoxGeometry(3.5,.55,1.3),M(0x0c1a21));b.position.set(4.8,1+i*.72,-16);world.add(b);for(let j=0;j<4;j++){let led=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.08),M(j%2?0x74efff:0x7dffa8));led.position.set(3.25+j*.35,1+i*.72,-15.3);world.add(led)}}}
+addServerRack();
+function monitor(x,y,z,rot=0){
+ let g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=rot;let frame=new THREE.Mesh(new THREE.BoxGeometry(2.5,1.5,.18),M(0x0b151b));g.add(frame);
+ let screen=new THREE.Mesh(new THREE.PlaneGeometry(2.15,1.15),new THREE.MeshBasicMaterial({color:0x12343d}));screen.position.z=.11;g.add(screen);world.add(g)
+}
+monitor(-4.8,2.4,-3.7,.25);monitor(-4.8,2.4,-27.7,-.25);monitor(4.8,2.4,-39.7,.2);
+for(let i=0;i<28;i++){let p=new THREE.Mesh(new THREE.SphereGeometry(.025,6,6),new THREE.MeshBasicMaterial({color:i%3?0x74efff:0xffbd66}));p.position.set((Math.random()-.5)*15,Math.random()*5.5+.2,-Math.random()*70);world.add(p)}
+let yaw=0,pitch=0,drag=false,lx=0,ly=0,keys={};
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==="t")document.getElementById("terminal").style.opacity=document.getElementById("terminal").style.opacity==="1"?"0":"1";if(e.key==="Escape")document.getElementById("panel").classList.remove("open")});
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+c.onpointerdown=e=>{drag=true;lx=e.clientX;ly=e.clientY};addEventListener("pointerup",()=>drag=false);addEventListener("pointermove",e=>{if(!drag)return;yaw-=(e.clientX-lx)*.004;pitch-=(e.clientY-ly)*.003;pitch=Math.max(-1.15,Math.min(1.15,pitch));lx=e.clientX;ly=e.clientY});
+c.onwheel=e=>{cam.translateZ(e.deltaY*.018);cam.position.y=Math.max(1.5,Math.min(6,cam.position.y));e.preventDefault()},{passive:false};
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();c.onclick=e=>{mouse.x=e.clientX/innerWidth*2-1;mouse.y=-e.clientY/innerHeight*2+1;ray.setFromCamera(mouse,cam);let h=ray.intersectObjects(Object.values(ns),true)[0];if(h){let g=h.object;while(g&&!g.userData.id)g=g.parent;if(g)open(g.userData.id)}};
+function open(id){let d=D[id];ey.textContent=d.ey;pt.textContent=d.t;px.textContent=d.x;tg.innerHTML=d.g.map(v=>`<span class="tag">${v}</span>`).join("");acts.innerHTML=d.a.map(v=>`<a class="btn" href="${v[1]}" target="_blank">${v[0]} ↗</a>`).join("");panel.classList.add("open")}
+document.querySelector(".close").onclick=()=>panel.classList.remove("open");
+const map=document.getElementById("map");Object.keys(D).forEach(id=>{let b=document.createElement("div");b.className="node";b.textContent=D[id].t.toUpperCase();b.onclick=()=>{cam.position.set(ns[id].position.x*.55,3,ns[id].position.z+7);open(id)};map.appendChild(b)});
+const ti=document.getElementById("termInput"),tb=document.getElementById("termBody");ti.onkeydown=e=>{if(e.key!=="Enter")return;let q=ti.value.toLowerCase().trim();ti.value="";let out={help:"about skills projects education contact home clear",about:"JJ Jewell — Web Developer / Systems Administrator / Homelab & Infrastructure Specialist.",skills:"Docker | Unraid | Coolify | WordPress | PHP | Linux | Networking | Ollama | Git | CI/CD | Cybersecurity",projects:"Jewellcore hosting | self-hosted homelab | local AI | 3D fabrication | WordPress",education:"Southwest Virginia Community College — IST + Cyber Security coursework.",contact:"jj.jewellcore@gmail.com"};let d=document.createElement("div");d.textContent="> "+(out[q]||"unknown command — type help");tb.insertBefore(d,tb.lastElementChild);tb.scrollTop=tb.scrollHeight;if(q==="home"){cam.position.set(0,3.2,15);yaw=0}if(q==="clear")tb.innerHTML="<div>cleared.</div><div>&gt; <input id='termInput' autocomplete='off'></div>"};
+function animate(){requestAnimationFrame(animate);let speed=.13;if(keys.w||keys.arrowup)cam.translateZ(-speed);if(keys.s||keys.arrowdown)cam.translateZ(speed);if(keys.a||keys.arrowleft)cam.translateX(-speed);if(keys.d||keys.arrowright)cam.translateX(speed);cam.rotation.set(pitch,yaw,0,"YXZ");Object.values(ns).forEach((n,i)=>{n.rotation.y+=.003;n.position.y=2+Math.sin(performance.now()*.001+i)*.12});r.render(s,cam)}animate();
+onresize=()=>{r.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+</script>
+</body></html>
